@@ -10,6 +10,7 @@ app = Flask(__name__)
 
 memory = {}
 memory['terminate'] = False
+memory['fail'] = False
 greetings = ['hola', 'hello', 'hi','hey','sup']
 output_greetings = ['Hola', 'Hello', 'Hi','Hey','Sup']
 satifaction_keys = ['great', 'happy', 'perfect']
@@ -22,9 +23,16 @@ durations = ['days', 'nights', 'weeks', 'months']
 recommendations = {'summer':'Barcelona', 'winter':'Rome','autumn':'Berlin','spring':'New York'}
 
 def check_for_start(sentence):
+    global memory
     if "get started" in sentence.lower():
+        memory = {}
+        memory['terminate'] = False
+        memory['fail'] = False
         return "Hi my name is Alex, and I'm your personal travel assistant, I can recommend places for you. would you please tell me about yourself (age, nationality, ..etc)?"
     elif check_for_greeting(sentence):
+        memory = {}
+        memory['terminate'] = False
+        memory['fail'] = False
         return "Hi my name is Alex, and I'm your personal travel assistant, I can recommend places for you. would you please tell me about yourself (age, nationality, ..etc)?"
 
 def check_for_greeting(sentence):
@@ -98,11 +106,14 @@ def find_age(sentence):
 #     return name
 
 def check_for_info_confirmation(sentence):
+    global memory
     response = None
     if "yes" in sentence.lower().split():
         response = "Great! So when do you want to travel "+memory["name"]+"(Please provide the Season or Dates)?"
+        memory['fail'] = False
     elif "no" in sentence.lower().split():
         response = "My bad, Could you please provide me your information again?"
+        memory['fail'] = True
     return response
 
 def check_for_time(sentence):
@@ -172,6 +183,7 @@ def check_for_satisfaction(sentence):
     response = "I'm sorry, I wasn't helpful enough, one of our sales agents will shortly get in contact with you!"
     memory = {}
     memory['terminate'] = False
+    memory['fail'] = True
     return response
 
 def send_flights_recommendations():
@@ -211,6 +223,7 @@ def respond(sentence):
         response = "Thanks for using Travel Buddy. See you!"
         memory = {}
         memory['terminate'] = False
+        memory['fail'] = False
     if "booking" in response:
         response += " Would you like any further assistance?"
         memory['terminate'] = True
@@ -218,11 +231,13 @@ def respond(sentence):
     return response
 
 def handle_message(sentence):
+    global memory
     response_message = respond(sentence)
     print("I should respond here with: "+response_message)
     response_body = json.dumps({
         "message": {
-            "text": response_message
+            "text": response_message,
+            "fail": memory['fail']
         }
     })
     return response_body
